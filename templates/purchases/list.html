@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Purchase Bills - Vypar{% endblock %}
+{% block page_title %}<i class="bi bi-cart3 text-primary"></i> Purchase Bills{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <a href="{{ url_for('purchases.list_purchases') }}" class="btn btn-sm {% if not status %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+        <a href="{{ url_for('purchases.list_purchases', status='unpaid') }}" class="btn btn-sm {% if status == 'unpaid' %}btn-danger{% else %}btn-outline-danger{% endif %}">Unpaid</a>
+        <a href="{{ url_for('purchases.list_purchases', status='paid') }}" class="btn btn-sm {% if status == 'paid' %}btn-success{% else %}btn-outline-success{% endif %}">Paid</a>
+    </div>
+    <div>
+        <a href="{{ url_for('purchases.purchases_csv_download') }}" class="btn btn-outline-success btn-sm me-2"><i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV</a>
+        <a href="{{ url_for('purchases.create_purchase') }}" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> New Purchase</a>
+    </div>
+</div>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Bill #</th><th>Date</th><th>Supplier</th><th class="text-end">Amount</th><th class="text-end">Paid</th><th class="text-end">Balance</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            {% for bill in purchases.items %}
+                <tr>
+                    <td><a href="{{ url_for('purchases.view_purchase', bill_id=bill.id) }}" class="fw-semibold text-decoration-none">{{ bill.bill_number }}</a></td>
+                    <td>{{ bill.bill_date.strftime('%d %b %Y') if bill.bill_date else '' }}</td>
+                    <td>{{ bill.supplier.name }}</td>
+                    <td class="text-end amt">₹{{ bill.grand_total|float|ind }}</td>
+                    <td class="text-end amt text-green">₹{{ bill.amount_paid|float|ind }}</td>
+                    <td class="text-end amt text-red">₹{{ bill.balance_due|float|ind }}</td>
+                    <td><span class="badge badge-{{ bill.payment_status }}">{{ bill.payment_status|title }}</span></td>
+                    <td><a href="{{ url_for('purchases.view_purchase', bill_id=bill.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
+                </tr>
+            {% else %}
+                <tr><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-inbox me-1"></i>No purchase bills</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

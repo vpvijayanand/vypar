@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}GSTR-1 Summary - Vypar{% endblock %}
+{% block page_title %}GSTR-1 Summary{% endblock %}
+{% block content %}
+<div class="card mb-4"><div class="card-body">
+    <form method="GET" class="row g-3 align-items-end">
+        <div class="col-md-3"><label class="form-label">From</label><input type="date" name="start" class="form-control" value="{{ start }}"></div>
+        <div class="col-md-3"><label class="form-label">To</label><input type="date" name="end" class="form-control" value="{{ end }}"></div>
+        <div class="col-md-3"><button class="btn btn-primary w-100">Generate</button></div>
+        <div class="col-md-3"><a href="{{ url_for('reports.gstr1_csv_download', start=start, end=end) }}" class="btn btn-outline-success w-100"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Download CSV</a></div>
+    </form>
+</div></div>
+{% if data %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="card text-center py-3"><h6 class="text-muted mb-1">Total Invoices</h6><h4>{{ data.total_invoices or 0 }}</h4></div></div>
+    <div class="col-md-4"><div class="card text-center py-3"><h6 class="text-muted mb-1">Taxable Value</h6><h4 class="amt">₹{{ (data.total_taxable or 0)|ind }}</h4></div></div>
+    <div class="col-md-4"><div class="card text-center py-3"><h6 class="text-muted mb-1">Total Tax</h6><h4 class="amt">₹{{ (data.total_tax or 0)|ind }}</h4></div></div>
+</div>
+<div class="card mb-4"><div class="card-header"><h5 class="mb-0">B2B Invoices (with GSTIN)</h5></div><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0">
+    <thead><tr><th>Invoice #</th><th>Date</th><th>Party</th><th>GSTIN</th><th class="text-end">Taxable</th><th class="text-end">Tax</th><th class="text-end">Total</th></tr></thead>
+    <tbody>
+    {% for inv in data.b2b %}
+    <tr>
+        <td>{{ inv.invoice_number }}</td>
+        <td>{{ inv.invoice_date }}</td>
+        <td>{{ inv.party_name }}</td>
+        <td><code>{{ inv.gstin }}</code></td>
+        <td class="text-end amt">₹{{ inv.taxable_amount|ind }}</td>
+        <td class="text-end amt">₹{{ inv.tax_amount|ind }}</td>
+        <td class="text-end amt fw-bold">₹{{ inv.total|ind }}</td>
+    </tr>
+    {% else %}<tr><td colspan="7" class="text-center text-muted py-3">No B2B invoices</td></tr>
+    {% endfor %}
+    </tbody>
+</table></div></div></div>
+<div class="card"><div class="card-header"><h5 class="mb-0">B2C Invoices (without GSTIN)</h5></div><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0">
+    <thead><tr><th>Invoice #</th><th>Date</th><th>Party</th><th class="text-end">Taxable</th><th class="text-end">Tax</th><th class="text-end">Total</th></tr></thead>
+    <tbody>
+    {% for inv in data.b2c %}
+    <tr>
+        <td>{{ inv.invoice_number }}</td>
+        <td>{{ inv.invoice_date }}</td>
+        <td>{{ inv.party_name }}</td>
+        <td class="text-end amt">₹{{ inv.taxable_amount|ind }}</td>
+        <td class="text-end amt">₹{{ inv.tax_amount|ind }}</td>
+        <td class="text-end amt fw-bold">₹{{ inv.total|ind }}</td>
+    </tr>
+    {% else %}<tr><td colspan="6" class="text-center text-muted py-3">No B2C invoices</td></tr>
+    {% endfor %}
+    </tbody>
+</table></div></div></div>
+{% else %}
+<div class="text-center py-5 text-muted"><i class="bi bi-file-earmark-text fs-1"></i><p class="mt-2">Select date range to generate GSTR-1 summary</p></div>
+{% endif %}
+{% endblock %}

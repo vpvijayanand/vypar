@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}New Purchase Bill - Vypar{% endblock %}
+{% block page_title %}New Purchase Bill{% endblock %}
+
+{% block content %}
+<form method="POST" id="purchaseForm">
+    <div class="row g-3 mb-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">Purchase Details</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Supplier <span class="text-danger">*</span></label>
+                            <select name="supplier_id" class="form-select" required onchange="supplierSelected(this)">
+                                <option value="">-- Select Supplier --</option>
+                                {% for s in suppliers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Bill Date</label>
+                            <input type="date" name="bill_date" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Due Date</label>
+                            <input type="date" name="due_date" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Amount Paid</label>
+                            <input type="number" step="0.01" name="amount_paid" class="form-control" value="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">Supplier Address</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Billing Address</label>
+                        <textarea name="billing_address" id="pBillingAddr" class="form-control" rows="2" readonly></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Shipping Address</label>
+                        <textarea name="shipping_address" id="pShippingAddr" class="form-control" rows="2" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            Purchase Items
+            <div class="d-flex gap-2">
+                <div class="input-group input-group-sm" style="width: 280px;">
+                    <span class="input-group-text bg-warning text-dark"><i class="bi bi-upc-scan"></i></span>
+                    <input type="text" id="pBarcodeInput" class="form-control" placeholder="Scan barcode or type & press Enter">
+                </div>
+                <button type="button" class="btn btn-sm btn-primary" onclick="addPurchaseItem()"><i class="bi bi-plus me-1"></i>Add Item</button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <table class="table mb-0">
+                <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Disc%</th><th>GST%</th><th>Tax</th><th>Total</th><th></th></tr></thead>
+                <tbody id="purchaseItemsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Notes</label>
+            <textarea name="notes" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="mb-2"><span class="text-muted">Subtotal:</span> <strong id="pSubtotal">₹0.00</strong></div>
+            <div class="mb-2"><span class="text-muted">Tax:</span> <strong id="pTax">₹0.00</strong></div>
+            <div class="fs-4"><span class="text-muted">Total:</span> <strong id="pTotal" class="text-primary">₹0.00</strong></div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-lg me-1"></i>Create Purchase</button>
+        <a href="{{ url_for('purchases.list_purchases') }}" class="btn btn-outline-secondary btn-lg ms-2">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const pItems = {{ items_json|tojson if items_json else '[]'|safe }};
+const suppliers = {{ suppliers_json|tojson if suppliers_json else '[]'|safe }};
+let pIdx = 0;
+
+/* ─── Supplier auto-fill addresses ─── */
+function supplierSelected(sel) {
+    const suppId = parseInt(sel.value);
+    const supplier = suppliers.find(s => s.id === suppId);
+    if (supplier) {
+        document.getElementById('pBillingAddr').value = supplier.billing_address || '';
+        document.getElementById('pShippingAddr').value = supplier.shipping_address || supplier.billing_address || '';
+    } else {
+        document.getElementById('pBillingAddr').value = '';
+        document.getElementById('pShippingAddr').value = '';
+    }
+}
+
+/* ─── Barcode scanning ─── */
+document.getElementById('pBarcodeInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const barcode = this.value.trim();
+        if (!barcode) return;
+        const item = pItems.find(i => i.barcode === barcode || i.item_code === barcode);
+        if (item) {
+            addItemByBarcode(item);
+            this.value = '';
+            this.classList.remove('is-invalid');
+        } else {
+            this.classList.add('is-invalid');
+            showPBarcodeToast(`No item found for barcode: ${barcode}`);
+        }
+        this.focus();
+    }
+});
+
+function addItemByBarcode(item) {
+    const rows = document.querySelectorAll('#purchaseItemsBody tr');
+    for (const row of rows) {
+        const sel = row.querySelector('select[name*="item_id"]');
+        if (sel && sel.value == item.id) {
+            const qtyInput = row.querySelector('input[name*="quantity"]');
+            qtyInput.value = parseFloat(qtyInput.value || 0) + 1;
+            const idx = sel.name.match(/\[(\d+)\]/)[1];
+            pCalcRow(parseInt(idx));
+            showPBarcodeToast(`+1 ${item.item_name} (Qty: ${qtyInput.value})`, 'success');
+            return;
+        }
+    }
+    const idx = pIdx;
+    addPurchaseItem();
+    const sel = document.querySelector(`[name="items[${idx}][item_id]"]`);
+    sel.value = item.id;
+    pItemSelected(sel, idx);
+    showPBarcodeToast(`Added: ${item.item_name}`, 'success');
+}
+
+function showPBarcodeToast(msg, type = 'danger') {
+    let toast = document.getElementById('pBarcodeToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'pBarcodeToast';
+        toast.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;min-width:280px;';
+        document.body.appendChild(toast);
+    }
+    const bg = type === 'success' ? 'bg-success' : 'bg-danger';
+    toast.innerHTML = `<div class="alert ${bg} text-white alert-dismissible fade show py-2 px-3 shadow" role="alert">
+        <i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2"></i>${msg}
+        <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="alert"></button>
+    </div>`;
+    setTimeout(() => { if (toast.firstChild) toast.firstChild.remove(); }, 3000);
+}
+
+/* ─── Item rows ─── */
+function addPurchaseItem() {
+    const tbody = document.getElementById('purchaseItemsBody');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td><select name="items[${pIdx}][item_id]" class="form-select form-select-sm" required onchange="pItemSelected(this,${pIdx})">
+            <option value="">Select...</option>
+            ${pItems.map(i => `<option value="${i.id}" data-price="${i.purchase_price}" data-gst="${i.gst_rate}">${i.item_name}${i.barcode ? ' ['+i.barcode+']' : ''}</option>`).join('')}
+        </select></td>
+        <td><input type="number" step="0.001" name="items[${pIdx}][quantity]" class="form-control form-control-sm" value="1" onchange="pCalcRow(${pIdx})"></td>
+        <td><input type="number" step="0.01" name="items[${pIdx}][unit_price]" class="form-control form-control-sm" value="0" onchange="pCalcRow(${pIdx})"></td>
+        <td><input type="number" step="0.01" name="items[${pIdx}][discount_percent]" class="form-control form-control-sm" value="0" onchange="pCalcRow(${pIdx})"></td>
+        <td><input type="number" step="0.01" name="items[${pIdx}][gst_rate]" class="form-control form-control-sm" value="0" onchange="pCalcRow(${pIdx})"></td>
+        <td><span id="ptax_${pIdx}">₹0.00</span></td>
+        <td><strong><span id="ptotal_${pIdx}">₹0.00</span></strong></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove();pCalcTotals()"><i class="bi bi-x"></i></button></td>
+    `;
+    tbody.appendChild(row);
+    pIdx++;
+}
+
+function pItemSelected(sel, idx) {
+    const opt = sel.options[sel.selectedIndex];
+    document.querySelector(`[name="items[${idx}][unit_price]"]`).value = opt.dataset.price || 0;
+    document.querySelector(`[name="items[${idx}][gst_rate]"]`).value = opt.dataset.gst || 0;
+    pCalcRow(idx);
+}
+
+function pCalcRow(idx) {
+    const qty = parseFloat(document.querySelector(`[name="items[${idx}][quantity]"]`)?.value || 0);
+    const price = parseFloat(document.querySelector(`[name="items[${idx}][unit_price]"]`)?.value || 0);
+    const disc = parseFloat(document.querySelector(`[name="items[${idx}][discount_percent]"]`)?.value || 0);
+    const gst = parseFloat(document.querySelector(`[name="items[${idx}][gst_rate]"]`)?.value || 0);
+    const base = qty * price;
+    const taxable = base - (base * disc / 100);
+    const tax = taxable * gst / 100;
+    document.getElementById(`ptax_${idx}`).textContent = `₹${tax.toFixed(2)}`;
+    document.getElementById(`ptotal_${idx}`).textContent = `₹${(taxable + tax).toFixed(2)}`;
+    pCalcTotals();
+}
+
+function pCalcTotals() {
+    let sub = 0, tax = 0;
+    document.querySelectorAll('#purchaseItemsBody tr').forEach(row => {
+        const q = parseFloat(row.querySelector('[name*="quantity"]')?.value || 0);
+        const p = parseFloat(row.querySelector('[name*="unit_price"]')?.value || 0);
+        const d = parseFloat(row.querySelector('[name*="discount_percent"]')?.value || 0);
+        const g = parseFloat(row.querySelector('[name*="gst_rate"]')?.value || 0);
+        const b = q * p; const t = b - (b * d / 100); const tx = t * g / 100;
+        sub += t; tax += tx;
+    });
+    document.getElementById('pSubtotal').textContent = `₹${sub.toFixed(2)}`;
+    document.getElementById('pTax').textContent = `₹${tax.toFixed(2)}`;
+    document.getElementById('pTotal').textContent = `₹${Math.round(sub + tax).toFixed(2)}`;
+}
+addPurchaseItem();
+</script>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Settings - Vypar{% endblock %}
+{% block page_title %}<i class="bi bi-gear-fill text-primary"></i> Settings{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <!-- Company Profile -->
+    <div class="col-md-4">
+        <a href="{{ url_for('settings.company_settings') }}" class="text-decoration-none">
+            <div class="card h-100 card-hover">
+                <div class="card-body text-center py-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                         style="width:56px;height:56px;background:rgba(67,97,238,0.1);">
+                        <i class="bi bi-building fs-4 text-primary"></i>
+                    </div>
+                    <h6 class="fw-bold">Company Profile</h6>
+                    <p class="text-muted mb-0 small">Update business name, GSTIN, address & logo</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <!-- User Management -->
+    <div class="col-md-4">
+        <a href="{{ url_for('settings.create_user') }}" class="text-decoration-none">
+            <div class="card h-100 card-hover">
+                <div class="card-body text-center py-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                         style="width:56px;height:56px;background:rgba(16,185,129,0.1);">
+                        <i class="bi bi-people-fill fs-4 text-success"></i>
+                    </div>
+                    <h6 class="fw-bold">User Management</h6>
+                    <p class="text-muted mb-0 small">Add staff users, assign roles</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <!-- Placeholder -->
+    <div class="col-md-4">
+        <div class="card h-100" style="opacity:0.5;">
+            <div class="card-body text-center py-4">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                     style="width:56px;height:56px;background:rgba(100,116,139,0.1);">
+                    <i class="bi bi-cloud-arrow-up fs-4 text-secondary"></i>
+                </div>
+                <h6 class="fw-bold">Backup & Restore</h6>
+                <p class="text-muted mb-0 small">Export data or restore from backup</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Invoice & GST Settings Inline -->
+<div class="row g-4 mt-2">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-receipt-cutoff text-primary me-2"></i>Invoice Settings</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('settings.invoice_settings') }}">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Invoice Prefix</label>
+                            <input type="text" name="invoice_prefix" class="form-control" value="{{ inv_settings.invoice_prefix if inv_settings else 'INV-' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Estimate Prefix</label>
+                            <input type="text" name="estimate_prefix" class="form-control" value="{{ inv_settings.estimate_prefix if inv_settings else 'EST-' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Purchase Prefix</label>
+                            <input type="text" name="purchase_prefix" class="form-control" value="{{ inv_settings.purchase_prefix if inv_settings else 'PUR-' }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Default Terms & Conditions</label>
+                            <textarea name="default_terms" class="form-control" rows="2">{{ inv_settings.default_terms if inv_settings else '' }}</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="show_logo" id="showLogo" {% if inv_settings and inv_settings.show_logo %}checked{% endif %}>
+                                <label class="form-check-label small" for="showLogo">Show logo on invoice</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="show_signature" id="showSig" {% if inv_settings and inv_settings.show_signature %}checked{% endif %}>
+                                <label class="form-check-label small" for="showSig">Show signature</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3"><button class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1"></i>Save Invoice Settings</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-percent text-warning me-2"></i>GST Settings</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('settings.gst_settings') }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Company State</label>
+                            <input type="text" name="company_state" class="form-control" value="{{ gst_settings.company_state if gst_settings else '' }}" placeholder="e.g. Maharashtra">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Default GST Type</label>
+                            <select name="gst_type" class="form-select">
+                                <option value="intra" {% if gst_settings and gst_settings.gst_type == 'intra' %}selected{% endif %}>Intra-State (CGST + SGST)</option>
+                                <option value="inter" {% if gst_settings and gst_settings.gst_type == 'inter' %}selected{% endif %}>Inter-State (IGST)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="enable_gst" id="enableGst" {% if not gst_settings or gst_settings.enable_gst %}checked{% endif %}>
+                                <label class="form-check-label small" for="enableGst">Enable GST</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="enable_cess" id="enableCess" {% if gst_settings and gst_settings.enable_cess %}checked{% endif %}>
+                                <label class="form-check-label small" for="enableCess">Enable Cess</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3"><button class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1"></i>Save GST Settings</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Users List -->
+{% if users %}
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-people-fill text-info me-2"></i>Users</span>
+        <a href="{{ url_for('settings.create_user') }}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Add User</a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for u in users %}
+            <tr>
+                <td class="fw-semibold">{{ u.username }}</td>
+                <td>{{ u.full_name or '-' }}</td>
+                <td>{{ u.email or '-' }}</td>
+                <td><span class="badge bg-{{ 'primary' if u.role == 'admin' else ('info' if u.role == 'staff' else 'secondary') }}">{{ u.role|title }}</span></td>
+                <td><span class="badge bg-{{ 'success' if u.is_active else 'danger' }}">{{ 'Active' if u.is_active else 'Inactive' }}</span></td>
+                <td><a href="{{ url_for('settings.edit_user', user_id=u.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

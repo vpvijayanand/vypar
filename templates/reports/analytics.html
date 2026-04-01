@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+{% block title %}Analytics Dashboard - Vypar{% endblock %}
+{% block page_title %}<i class="bi bi-bar-chart-line-fill text-primary"></i> Analytics Dashboard — {{ year }}{% endblock %}
+
+{% block content %}
+<!-- Year Selector -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{{ url_for('reports.analytics', year=year-1) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-chevron-left"></i> {{ year-1 }}</a>
+        <span class="mx-3 fs-5 fw-bold">FY {{ year }}</span>
+        <a href="{{ url_for('reports.analytics', year=year+1) }}" class="btn btn-outline-secondary btn-sm">{{ year+1 }} <i class="bi bi-chevron-right"></i></a>
+    </div>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-grid me-1"></i>Business Dashboard</a>
+</div>
+
+<!-- Year Summary KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card p-3 border-start border-primary border-3">
+            <small class="text-muted">Total Revenue (Year)</small>
+            <div class="fs-5 fw-bold text-primary">₹{{ data.total_sales_year|ind }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-start border-danger border-3">
+            <small class="text-muted">Total Purchases (Year)</small>
+            <div class="fs-5 fw-bold text-danger">₹{{ data.total_purchases_year|ind }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-start border-warning border-3">
+            <small class="text-muted">Total Expenses (Year)</small>
+            <div class="fs-5 fw-bold text-warning">₹{{ data.total_expenses_year|ind }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 border-start border-3" style="border-left-color:{% if data.total_profit_year >= 0 %}#10b981{% else %}#ef4444{% endif %}!important;">
+            <small class="text-muted">Net Profit (Year)</small>
+            <div class="fs-5 fw-bold {% if data.total_profit_year >= 0 %}text-green{% else %}text-red{% endif %}">₹{{ data.total_profit_year|ind }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 1: Monthly Sales vs Purchases (Bar) + Monthly Profit Trend (Line) -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Monthly Sales vs Purchases</div>
+            <div class="card-body"><canvas id="monthlyChart" height="120"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-graph-up text-success me-2"></i>Monthly Profit/Loss</div>
+            <div class="card-body"><canvas id="profitChart" height="200"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 2: Expense Breakdown (Pie) + Invoice Status (Doughnut) + Payment Modes (Doughnut) -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-pie-chart-fill text-warning me-2"></i>Expense Breakdown</div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="expensePieChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-clipboard-data text-info me-2"></i>Invoice Status</div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="statusChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-wallet2 text-success me-2"></i>Payment Modes</div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="paymentChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 3: Top Customers (Horizontal Bar) + Top Items (Horizontal Bar) -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-people-fill text-primary me-2"></i>Top Customers by Revenue</div>
+            <div class="card-body"><canvas id="customerChart" height="180"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-trophy-fill text-warning me-2"></i>Top Selling Items by Revenue</div>
+            <div class="card-body"><canvas id="itemChart" height="180"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- Row 4: Stock by Category (Pie) + Receivables Aging -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-box-seam text-info me-2"></i>Stock Value by Category</div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="stockCatChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-clock-fill text-danger me-2"></i>Receivables Status</div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="receivableChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-graph-up-arrow text-success me-2"></i>Monthly Expenses Trend</div>
+            <div class="card-body"><canvas id="expenseTrendChart" height="200"></canvas></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const MONTHS = {{ data.month_names|tojson }};
+const SALES = {{ data.sales_by_month|tojson }};
+const PURCHASES = {{ data.purchases_by_month|tojson }};
+const EXPENSES = {{ data.expenses_by_month|tojson }};
+const PROFITS = {{ data.profit_by_month|tojson }};
+const EXP_CATS = {{ data.expense_categories|tojson }};
+const STATUS = {{ data.status_distribution|tojson }};
+const PAY_MODES = {{ data.payment_modes|tojson }};
+const TOP_CUST = {{ data.top_customers|tojson }};
+const TOP_ITEMS = {{ data.top_items|tojson }};
+const STOCK_CATS = {{ data.stock_categories|tojson }};
+
+const COLORS = ['#4361ee','#ef4444','#f59e0b','#10b981','#8b5cf6','#ec4899','#06b6d4','#f97316','#14b8a6','#6366f1','#84cc16','#a855f7'];
+const ttCb = { callbacks: { label: ctx => ctx.label + ': ₹' + formatINR(ctx.raw) } };
+
+// 1. Monthly Sales vs Purchases Bar Chart
+new Chart(document.getElementById('monthlyChart'), {
+    type: 'bar',
+    data: {
+        labels: MONTHS,
+        datasets: [
+            { label: 'Sales', data: SALES, backgroundColor: 'rgba(67,97,238,0.7)', borderColor: '#4361ee', borderWidth: 1, borderRadius: 4 },
+            { label: 'Purchases', data: PURCHASES, backgroundColor: 'rgba(239,68,68,0.7)', borderColor: '#ef4444', borderWidth: 1, borderRadius: 4 },
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top', labels: { usePointStyle: true, font: { size: 11 } } },
+            tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ₹' + formatINR(ctx.raw) } }
+        },
+        scales: {
+            y: { beginAtZero: true, ticks: { callback: v => '₹' + formatINR(v), font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+// 2. Monthly Profit Line Chart
+new Chart(document.getElementById('profitChart'), {
+    type: 'line',
+    data: {
+        labels: MONTHS,
+        datasets: [{
+            label: 'Profit', data: PROFITS,
+            borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)',
+            fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#10b981',
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '₹' + formatINR(ctx.raw) } } },
+        scales: {
+            y: { ticks: { callback: v => '₹' + formatINR(v), font: { size: 9 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { ticks: { font: { size: 9 } }, grid: { display: false } }
+        }
+    }
+});
+
+// 3. Expense Pie Chart
+new Chart(document.getElementById('expensePieChart'), {
+    type: 'pie',
+    data: {
+        labels: EXP_CATS.map(c => c.name),
+        datasets: [{ data: EXP_CATS.map(c => c.amount), backgroundColor: COLORS, borderWidth: 1 }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, usePointStyle: true } },
+            tooltip: ttCb
+        }
+    }
+});
+
+// 4. Invoice Status Doughnut
+const statusColors = { paid: '#10b981', partial: '#f59e0b', unpaid: '#ef4444' };
+new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+        labels: STATUS.map(s => s.status.charAt(0).toUpperCase() + s.status.slice(1) + ' (' + s.count + ')'),
+        datasets: [{ data: STATUS.map(s => s.amount), backgroundColor: STATUS.map(s => statusColors[s.status] || '#6b7280'), borderWidth: 0 }]
+    },
+    options: {
+        responsive: true, cutout: '60%',
+        plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, usePointStyle: true } },
+            tooltip: ttCb
+        }
+    }
+});
+
+// 5. Payment Modes Doughnut
+const modeColors = { cash: '#10b981', bank: '#4361ee', upi: '#8b5cf6', cheque: '#f59e0b' };
+new Chart(document.getElementById('paymentChart'), {
+    type: 'doughnut',
+    data: {
+        labels: PAY_MODES.map(p => p.mode.charAt(0).toUpperCase() + p.mode.slice(1)),
+        datasets: [{ data: PAY_MODES.map(p => p.amount), backgroundColor: PAY_MODES.map(p => modeColors[p.mode] || '#6b7280'), borderWidth: 0 }]
+    },
+    options: {
+        responsive: true, cutout: '60%',
+        plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, usePointStyle: true } },
+            tooltip: ttCb
+        }
+    }
+});
+
+// 6. Top Customers Horizontal Bar
+new Chart(document.getElementById('customerChart'), {
+    type: 'bar',
+    data: {
+        labels: TOP_CUST.map(c => c.name),
+        datasets: [{ label: 'Revenue', data: TOP_CUST.map(c => c.amount), backgroundColor: COLORS.slice(0, TOP_CUST.length), borderRadius: 4 }]
+    },
+    options: {
+        indexAxis: 'y', responsive: true,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '₹' + formatINR(ctx.raw) } } },
+        scales: {
+            x: { ticks: { callback: v => '₹' + formatINR(v), font: { size: 9 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+            y: { ticks: { font: { size: 10 } }, grid: { display: false } }
+        }
+    }
+});
+
+// 7. Top Items Horizontal Bar
+new Chart(document.getElementById('itemChart'), {
+    type: 'bar',
+    data: {
+        labels: TOP_ITEMS.map(i => i.name.length > 25 ? i.name.substring(0, 25) + '…' : i.name),
+        datasets: [{ label: 'Revenue', data: TOP_ITEMS.map(i => i.amount), backgroundColor: COLORS.slice(0, TOP_ITEMS.length), borderRadius: 4 }]
+    },
+    options: {
+        indexAxis: 'y', responsive: true,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '₹' + formatINR(ctx.raw) } } },
+        scales: {
+            x: { ticks: { callback: v => '₹' + formatINR(v), font: { size: 9 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+            y: { ticks: { font: { size: 10 } }, grid: { display: false } }
+        }
+    }
+});
+
+// 8. Stock Category Pie
+new Chart(document.getElementById('stockCatChart'), {
+    type: 'pie',
+    data: {
+        labels: STOCK_CATS.map(c => c.name),
+        datasets: [{ data: STOCK_CATS.map(c => c.value), backgroundColor: COLORS, borderWidth: 1 }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 8, usePointStyle: true } },
+            tooltip: ttCb
+        }
+    }
+});
+
+// 9. Receivables Status
+new Chart(document.getElementById('receivableChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Current ({{ data.current_invoices }})', 'Overdue ({{ data.overdue_invoices }})'],
+        datasets: [{ data: [{{ data.current_invoices }}, {{ data.overdue_invoices }}], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0 }]
+    },
+    options: {
+        responsive: true, cutout: '60%',
+        plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, usePointStyle: true } },
+        }
+    }
+});
+
+// 10. Monthly Expenses Trend
+new Chart(document.getElementById('expenseTrendChart'), {
+    type: 'line',
+    data: {
+        labels: MONTHS,
+        datasets: [{
+            label: 'Expenses', data: EXPENSES,
+            borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)',
+            fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#f59e0b',
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '₹' + formatINR(ctx.raw) } } },
+        scales: {
+            y: { beginAtZero: true, ticks: { callback: v => '₹' + formatINR(v), font: { size: 9 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { ticks: { font: { size: 9 } }, grid: { display: false } }
+        }
+    }
+});
+</script>
+{% endblock %}

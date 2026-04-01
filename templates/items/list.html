@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Items - Vypar{% endblock %}
+{% block page_title %}<i class="bi bi-box-seam text-primary"></i> Items / Products{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="card p-3 border-start border-primary border-3"><small class="text-muted">Total Items</small><div class="fs-5 fw-bold">{{ stock_summary.total_items }}</div></div></div>
+    <div class="col-md-3"><div class="card p-3 border-start border-warning border-3"><small class="text-muted">Low Stock</small><div class="fs-5 fw-bold text-warning">{{ stock_summary.low_stock_count }}</div></div></div>
+    <div class="col-md-3"><div class="card p-3 border-start border-danger border-3"><small class="text-muted">Out of Stock</small><div class="fs-5 fw-bold text-danger">{{ stock_summary.out_of_stock_count }}</div></div></div>
+    <div class="col-md-3"><div class="card p-3 border-start border-success border-3"><small class="text-muted">Stock Value</small><div class="fs-5 fw-bold">₹{{ stock_summary.total_stock_value|ind }}</div></div></div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <form class="d-flex gap-2" method="GET">
+        <input type="text" name="search" class="form-control form-control-sm" placeholder="Search items..." value="{{ search }}">
+        <button class="btn btn-sm btn-outline-primary"><i class="bi bi-search"></i></button>
+    </form>
+    <div>
+        <a href="{{ url_for('items.items_csv_download') }}" class="btn btn-outline-success btn-sm me-2"><i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV</a>
+        <a href="{{ url_for('items.create_item') }}" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Add Item</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Item Name</th><th>SKU</th><th>Barcode</th><th>HSN</th><th>Sale Price</th><th>Stock</th><th>GST%</th><th>Actions</th></tr></thead>
+            <tbody>
+            {% for item in items.items %}
+                <tr>
+                    <td><strong>{{ item.item_name }}</strong></td>
+                    <td><code>{{ item.item_code or '-' }}</code></td>
+                    <td>{% if item.barcode %}<code><i class="bi bi-upc-scan me-1"></i>{{ item.barcode }}</code>{% else %}-{% endif %}</td>
+                    <td>{{ item.hsn_code or '-' }}</td>
+                    <td>₹{{ item.sale_price|float|ind }}</td>
+                    <td class="{% if item.is_low_stock %}text-danger fw-bold{% endif %}">{{ item.current_stock|float }} {{ item.unit }}</td>
+                    <td>{{ item.gst_rate|float }}%</td>
+                    <td>
+                        <a href="{{ url_for('items.view_item', item_id=item.id) }}" class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i></a>
+                        <a href="{{ url_for('items.edit_item', item_id=item.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                        <form method="POST" action="{{ url_for('items.delete_item', item_id=item.id) }}" class="d-inline" onsubmit="return confirm('Delete?')">
+                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="8" class="text-center text-muted py-4">No items found. <a href="{{ url_for('items.create_item') }}">Add one</a></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if items.pages > 1 %}
+<nav class="mt-3"><ul class="pagination justify-content-center">
+    {% for p in items.iter_pages() %}
+        {% if p %}<li class="page-item {% if p == items.page %}active{% endif %}"><a class="page-link" href="{{ url_for('items.list_items', page=p, search=search) }}">{{ p }}</a></li>
+        {% else %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+    {% endfor %}
+</ul></nav>
+{% endif %}
+{% endblock %}

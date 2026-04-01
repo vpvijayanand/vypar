@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}{{ item.item_name }} - Vypar{% endblock %}
+{% block page_title %}<i class="bi bi-box-seam text-primary"></i> {{ item.item_name }}{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header fw-bold">Product Details</div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4"><span class="form-label">Item Name</span><br><strong>{{ item.item_name }}</strong></div>
+                    <div class="col-md-4"><span class="form-label">SKU / Code</span><br><code>{{ item.item_code or 'N/A' }}</code></div>
+                    <div class="col-md-4"><span class="form-label">HSN Code</span><br><code>{{ item.hsn_code or 'N/A' }}</code></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3"><span class="form-label">Category</span><br><strong>{{ item.category.name if item.category else 'Uncategorized' }}</strong></div>
+                    <div class="col-md-3"><span class="form-label">Unit</span><br><strong>{{ item.unit }}</strong></div>
+                    <div class="col-md-3"><span class="form-label">GST Rate</span><br><strong>{{ item.gst_rate|float }}%</strong></div>
+                    <div class="col-md-3"><span class="form-label">Barcode</span><br><strong>{{ item.barcode or 'N/A' }}</strong></div>
+                </div>
+                {% if item.description %}
+                <div class="mb-3"><span class="form-label">Description</span><br>{{ item.description }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <!-- Pricing -->
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-currency-rupee text-success me-2"></i>Pricing</div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Sale Price</span>
+                    <strong class="text-primary">₹{{ item.sale_price|float|ind }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Purchase Price</span>
+                    <strong>₹{{ item.purchase_price|float|ind }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                    <span class="text-muted">Margin</span>
+                    {% set margin = item.sale_price|float - item.purchase_price|float %}
+                    <strong class="text-green">₹{{ margin|ind }} ({{ '%.1f'|format(margin / item.purchase_price|float * 100 if item.purchase_price|float > 0 else 0) }}%)</strong>
+                </div>
+            </div>
+        </div>
+        <!-- Stock -->
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-box text-info me-2"></i>Stock</div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Current Stock</span>
+                    <strong class="{% if item.is_low_stock %}text-danger{% endif %}">{{ item.current_stock|float }} {{ item.unit }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Min Alert Level</span>
+                    <strong>{{ item.min_stock_alert|float }} {{ item.unit }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Stock Value</span>
+                    <strong>₹{{ item.stock_value|ind }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Total Sold</span>
+                    <strong class="text-primary">{{ total_sold|int }} {{ item.unit }}</strong>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                    <span class="text-muted">Total Purchased</span>
+                    <strong>{{ total_purchased|int }} {{ item.unit }}</strong>
+                </div>
+            </div>
+        </div>
+        <div class="d-grid">
+            <a href="{{ url_for('items.edit_item', item_id=item.id) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil me-1"></i>Edit Item</a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sales -->
+{% if recent_sales %}
+<div class="card mb-3">
+    <div class="card-header"><i class="bi bi-receipt text-primary me-2"></i>Recent Sales of this Item</div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 small">
+            <thead><tr><th>Invoice</th><th>Date</th><th class="text-end">Qty</th><th class="text-end">Unit Price</th><th class="text-end">Total</th></tr></thead>
+            <tbody>
+            {% for s in recent_sales %}
+                <tr>
+                    <td class="fw-semibold">{{ s[0] }}</td>
+                    <td>{{ s[1].strftime('%d %b %Y') if s[1] else '' }}</td>
+                    <td class="text-end">{{ s[2]|float }}</td>
+                    <td class="text-end amt">₹{{ s[3]|float|ind }}</td>
+                    <td class="text-end amt fw-bold">₹{{ s[4]|float|ind }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<a href="{{ url_for('items.list_items') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back to Items</a>
+{% endblock %}

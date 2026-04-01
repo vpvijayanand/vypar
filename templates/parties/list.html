@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Parties - Vypar{% endblock %}
+{% block page_title %}<i class="bi bi-people-fill text-primary"></i> Customers & Suppliers{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <a href="{{ url_for('parties.list_parties') }}" class="btn btn-sm {% if not party_type %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+        <a href="{{ url_for('parties.list_parties', type='customer') }}" class="btn btn-sm {% if party_type == 'customer' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Customers</a>
+        <a href="{{ url_for('parties.list_parties', type='supplier') }}" class="btn btn-sm {% if party_type == 'supplier' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Suppliers</a>
+    </div>
+    <div>
+        <a href="{{ url_for('parties.parties_csv_download') }}" class="btn btn-outline-success btn-sm me-2"><i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV</a>
+        <a href="{{ url_for('parties.create_party') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> Add Party
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr><th>Name</th><th>Type</th><th>Phone</th><th>GSTIN</th><th>Balance</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+            {% for party in parties.items %}
+                <tr>
+                    <td><strong>{{ party.name }}</strong></td>
+                    <td><span class="badge bg-{{ 'primary' if party.party_type == 'customer' else 'info' if party.party_type == 'supplier' else 'secondary' }}">{{ party.party_type|title }}</span></td>
+                    <td>{{ party.phone or '-' }}</td>
+                    <td><code>{{ party.gstin or '-' }}</code></td>
+                    <td class="{{ 'text-success' if party.balance_type == 'receivable' else 'text-danger' }}">
+                        ₹{{ party.current_balance|float|ind }}
+                        <small>({{ party.balance_type }})</small>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('parties.view_party', party_id=party.id) }}" class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i></a>
+                        <a href="{{ url_for('parties.edit_party', party_id=party.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                        <form method="POST" action="{{ url_for('parties.delete_party', party_id=party.id) }}" class="d-inline" onsubmit="return confirm('Delete this party?')">
+                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No parties found. <a href="{{ url_for('parties.create_party') }}">Add one</a></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if parties.pages > 1 %}
+<nav class="mt-3"><ul class="pagination justify-content-center">
+    {% for p in parties.iter_pages() %}
+        {% if p %}<li class="page-item {% if p == parties.page %}active{% endif %}"><a class="page-link" href="{{ url_for('parties.list_parties', page=p, type=party_type) }}">{{ p }}</a></li>
+        {% else %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+    {% endfor %}
+</ul></nav>
+{% endif %}
+{% endblock %}

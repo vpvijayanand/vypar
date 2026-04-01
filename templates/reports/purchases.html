@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Purchase Report - Vypar{% endblock %}
+{% block page_title %}<i class="bi bi-graph-down text-info"></i> Purchase Report{% endblock %}
+{% block content %}
+<div class="card mb-4"><div class="card-body">
+    <form method="GET" class="row g-3 align-items-end">
+        <div class="col-md-3"><label class="form-label">From</label><input type="date" name="from_date" class="form-control" value="{{ request.args.get('from_date','') }}"></div>
+        <div class="col-md-3"><label class="form-label">To</label><input type="date" name="to_date" class="form-control" value="{{ request.args.get('to_date','') }}"></div>
+        <div class="col-md-3"><label class="form-label">Party</label><select name="party_id" class="form-select"><option value="">All</option>{% for p in parties %}<option value="{{ p.id }}" {% if request.args.get('party_id')|string == p.id|string %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div>
+        <div class="col-md-3"><button class="btn btn-primary w-100">Apply</button></div>
+    </form>
+    <div class="mt-2 text-end"><a href="{{ url_for('reports.purchases_report_csv', from_date=request.args.get('from_date',''), to_date=request.args.get('to_date',''), party_id=request.args.get('party_id','')) }}" class="btn btn-sm btn-outline-success"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Download CSV</a></div>
+</div></div>
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card text-center py-3"><h6 class="text-muted mb-1">Total Purchases</h6><h4 class="amt">₹{{ (data.total_amount or 0)|ind }}</h4></div></div>
+    <div class="col-md-3"><div class="card text-center py-3"><h6 class="text-muted mb-1">Bills</h6><h4>{{ data.count or 0 }}</h4></div></div>
+    <div class="col-md-3"><div class="card text-center py-3"><h6 class="text-muted mb-1">GST Paid</h6><h4 class="amt">₹{{ (data.total_tax or 0)|ind }}</h4></div></div>
+    <div class="col-md-3"><div class="card text-center py-3"><h6 class="text-muted mb-1">Paid Out</h6><h4 class="amt">₹{{ (data.total_paid or 0)|ind }}</h4></div></div>
+</div>
+<div class="card"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0">
+    <thead><tr><th>Bill #</th><th>Date</th><th>Supplier</th><th class="text-end">Amount</th><th class="text-end">Paid</th><th class="text-end">Balance</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for bill in data.bills %}
+    <tr>
+        <td><a href="{{ url_for('purchases.view_purchase', bill_id=bill.id) }}" class="fw-semibold text-decoration-none">{{ bill.bill_number }}</a></td>
+        <td>{{ bill.bill_date }}</td>
+        <td>{{ bill.supplier_name or '-' }}</td>
+        <td class="text-end amt">₹{{ (bill.grand_total or 0)|ind }}</td>
+        <td class="text-end amt text-green">₹{{ (bill.amount_paid or 0)|ind }}</td>
+        <td class="text-end amt text-red">₹{{ (bill.balance_due or 0)|ind }}</td>
+        <td><span class="badge badge-{{ bill.payment_status }}">{{ bill.payment_status|title }}</span></td>
+    </tr>
+    {% else %}<tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-inbox me-1"></i>No bills found</td></tr>
+    {% endfor %}
+    </tbody>
+</table></div></div></div>
+{% endblock %}

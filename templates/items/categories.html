@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Categories - Vypar{% endblock %}
+{% block page_title %}Item Categories{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">Add Category</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Category Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Parent Category</label>
+                        <select name="parent_id" class="form-select">
+                            <option value="">-- None (Top Level) --</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Category</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">All Categories</div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead><tr><th>Name</th><th>Parent</th></tr></thead>
+                    <tbody>
+                    {% for cat in categories %}
+                        <tr><td>{{ cat.name }}</td><td>{{ cat.parent.name if cat.parent else '-' }}</td></tr>
+                    {% else %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">No categories</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

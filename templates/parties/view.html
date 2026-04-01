@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}{{ party.name }} - Vypar{% endblock %}
+{% block page_title %}<i class="bi bi-person-fill text-primary"></i> {{ party.name }}{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-bold">{{ party.name }}</span>
+                <span class="badge bg-{{ 'primary' if party.party_type == 'customer' else 'info' if party.party_type == 'supplier' else 'secondary' }}">{{ party.party_type|title }}</span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4"><span class="form-label">Phone</span><br><strong>{{ party.phone or 'N/A' }}</strong></div>
+                    <div class="col-md-4"><span class="form-label">Email</span><br><strong>{{ party.email or 'N/A' }}</strong></div>
+                    <div class="col-md-4"><span class="form-label">GSTIN</span><br><code>{{ party.gstin or 'N/A' }}</code></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4"><span class="form-label">City</span><br><strong>{{ party.city or 'N/A' }}</strong></div>
+                    <div class="col-md-4"><span class="form-label">State</span><br><strong>{{ party.state or 'N/A' }}</strong></div>
+                    <div class="col-md-4"><span class="form-label">Pincode</span><br><strong>{{ party.pincode or 'N/A' }}</strong></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6"><span class="form-label">Billing Address</span><br>{{ party.billing_address or 'N/A' }}</div>
+                    <div class="col-md-3"><span class="form-label">Credit Limit</span><br><strong>₹{{ party.credit_limit|float|ind }}</strong></div>
+                    <div class="col-md-3"><span class="form-label">Payment Terms</span><br><strong>{{ party.payment_terms_days }} days</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-body text-center">
+                <div class="stat-label">Current Balance</div>
+                <div class="fs-3 fw-bold {{ 'text-green' if party.balance_type == 'receivable' else 'text-red' }}">
+                    ₹{{ party.current_balance|float|ind }}
+                </div>
+                <small class="text-muted">({{ party.balance_type|title }})</small>
+            </div>
+        </div>
+        <div class="d-grid gap-2">
+            <a href="{{ url_for('reports.party_statement', party_id=party.id) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-text me-1"></i>View Statement</a>
+            <a href="{{ url_for('parties.edit_party', party_id=party.id) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil me-1"></i>Edit Party</a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sales -->
+{% if sales %}
+<div class="card mb-3">
+    <div class="card-header"><i class="bi bi-receipt text-primary me-2"></i>Recent Sales</div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 small">
+            <thead><tr><th>Invoice</th><th>Date</th><th class="text-end">Amount</th><th class="text-end">Balance</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for inv in sales %}
+                <tr>
+                    <td><a href="{{ url_for('sales.view_invoice', invoice_id=inv.id) }}">{{ inv.invoice_number }}</a></td>
+                    <td>{{ inv.invoice_date.strftime('%d %b %Y') }}</td>
+                    <td class="text-end amt">₹{{ inv.grand_total|float|ind }}</td>
+                    <td class="text-end amt text-red">₹{{ inv.balance_due|float|ind }}</td>
+                    <td><span class="badge badge-{{ inv.status }}">{{ inv.status|title }}</span></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Purchases -->
+{% if purchases %}
+<div class="card mb-3">
+    <div class="card-header"><i class="bi bi-cart3 text-danger me-2"></i>Recent Purchases</div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 small">
+            <thead><tr><th>Bill</th><th>Date</th><th class="text-end">Amount</th><th class="text-end">Balance</th><th>Status</th></tr></thead>
+            <tbody>
+            {% for bill in purchases %}
+                <tr>
+                    <td><a href="{{ url_for('purchases.view_purchase', bill_id=bill.id) }}">{{ bill.bill_number }}</a></td>
+                    <td>{{ bill.bill_date.strftime('%d %b %Y') }}</td>
+                    <td class="text-end amt">₹{{ bill.grand_total|float|ind }}</td>
+                    <td class="text-end amt text-red">₹{{ bill.balance_due|float|ind }}</td>
+                    <td><span class="badge badge-{{ bill.payment_status }}">{{ bill.payment_status|title }}</span></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Payments -->
+{% if payments %}
+<div class="card mb-3">
+    <div class="card-header"><i class="bi bi-cash-coin text-success me-2"></i>Recent Payments Received</div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 small">
+            <thead><tr><th>Payment #</th><th>Date</th><th>Mode</th><th class="text-end">Amount</th><th>Reference</th></tr></thead>
+            <tbody>
+            {% for pay in payments %}
+                <tr>
+                    <td>{{ pay.payment_number }}</td>
+                    <td>{{ pay.payment_date.strftime('%d %b %Y') if pay.payment_date else '' }}</td>
+                    <td><span class="badge bg-secondary">{{ pay.payment_mode|title }}</span></td>
+                    <td class="text-end amt text-green">₹{{ pay.amount_received|float|ind }}</td>
+                    <td>{{ pay.reference_number or '-' }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<a href="{{ url_for('parties.list_parties') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Back to Parties</a>
+{% endblock %}

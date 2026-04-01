@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Company Setup - Vypar{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-building me-2"></i>Setup Your Company</div>
+            <div class="card-body">
+                <p class="text-muted">Please set up your company details to get started.</p>
+                <a href="{{ url_for('settings.company_settings') }}" class="btn btn-primary">
+                    <i class="bi bi-arrow-right me-1"></i> Setup Company
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

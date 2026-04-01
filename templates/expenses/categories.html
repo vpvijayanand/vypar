@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Expense Categories - Vypar{% endblock %}
+{% block page_title %}Expense Categories{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">Add Category</div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <input type="text" name="description" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead><tr><th>Name</th><th>Description</th></tr></thead>
+                    <tbody>
+                    {% for cat in categories %}
+                        <tr><td>{{ cat.name }}</td><td>{{ cat.description or '-' }}</td></tr>
+                    {% else %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">No categories</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

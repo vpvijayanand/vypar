@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if party else 'Add' }} Party - Vypar{% endblock %}
+{% block page_title %}{{ 'Edit' if party else 'Add New' }} Party{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Party Type <span class="text-danger">*</span></label>
+                            <select name="party_type" class="form-select" required>
+                                <option value="customer" {% if party and party.party_type == 'customer' %}selected{% endif %}>Customer</option>
+                                <option value="supplier" {% if party and party.party_type == 'supplier' %}selected{% endif %}>Supplier</option>
+                                <option value="both" {% if party and party.party_type == 'both' %}selected{% endif %}>Both</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" value="{{ party.name if party else '' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input type="text" name="phone" class="form-control" value="{{ party.phone if party else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" value="{{ party.email if party else '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">GSTIN</label>
+                            <input type="text" name="gstin" class="form-control" maxlength="15" value="{{ party.gstin if party else '' }}" placeholder="22AAAAA0000A1Z5">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">PAN</label>
+                            <input type="text" name="pan" class="form-control" maxlength="10" value="{{ party.pan if party else '' }}">
+                        </div>
+
+                        <div class="col-12"><hr><h6 class="text-muted">Address</h6></div>
+                        <div class="col-md-6">
+                            <label class="form-label">Billing Address</label>
+                            <textarea name="billing_address" class="form-control" rows="2">{{ party.billing_address if party else '' }}</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Shipping Address</label>
+                            <textarea name="shipping_address" class="form-control" rows="2">{{ party.shipping_address if party else '' }}</textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">City</label>
+                            <input type="text" name="city" class="form-control" value="{{ party.city if party else '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">State</label>
+                            <input type="text" name="state" class="form-control" value="{{ party.state if party else '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Pincode</label>
+                            <input type="text" name="pincode" class="form-control" value="{{ party.pincode if party else '' }}">
+                        </div>
+
+                        <div class="col-12"><hr><h6 class="text-muted">Financial</h6></div>
+                        {% if not party %}
+                        <div class="col-md-4">
+                            <label class="form-label">Opening Balance</label>
+                            <input type="number" step="0.01" name="opening_balance" class="form-control" value="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Balance Type</label>
+                            <select name="balance_type" class="form-select">
+                                <option value="receivable">Receivable (They owe you)</option>
+                                <option value="payable">Payable (You owe them)</option>
+                            </select>
+                        </div>
+                        {% endif %}
+                        <div class="col-md-4">
+                            <label class="form-label">Credit Limit</label>
+                            <input type="number" step="0.01" name="credit_limit" class="form-control" value="{{ party.credit_limit|float if party else 0 }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Payment Terms (Days)</label>
+                            <input type="number" name="payment_terms_days" class="form-control" value="{{ party.payment_terms_days if party else 30 }}">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Notes</label>
+                            <textarea name="notes" class="form-control" rows="2">{{ party.notes if party else '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ 'Update' if party else 'Save' }} Party</button>
+                        <a href="{{ url_for('parties.list_parties') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

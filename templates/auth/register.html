@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Register - Vypar{% endblock %}
+
+{% block content_unauth %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center" style="background:linear-gradient(135deg,#1a1d3e 0%,#4361ee 100%);">
+    <div class="col-11 col-sm-8 col-md-5 col-lg-4 col-xl-3">
+        <div class="card shadow-lg border-0" style="border-radius:20px;">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                         style="width:64px;height:64px;background:linear-gradient(135deg,#4361ee,#7c3aed);">
+                        <i class="bi bi-box-seam-fill text-white" style="font-size:1.8rem;"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1" style="color:#1a1d3e;">Create Account</h3>
+                    <p class="text-muted small mb-0">Start managing your business today</p>
+                </div>
+                <form method="POST" autocomplete="off">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted">BUSINESS NAME</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-building text-muted"></i></span>
+                            <input type="text" name="company_name" class="form-control border-start-0 bg-light"
+                                   placeholder="Your business name" style="border-radius:0 8px 8px 0;">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted">USERNAME <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
+                            <input type="text" name="username" class="form-control border-start-0 bg-light" required
+                                   style="border-radius:0 8px 8px 0;">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted">EMAIL <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+                            <input type="email" name="email" class="form-control border-start-0 bg-light" required
+                                   style="border-radius:0 8px 8px 0;">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small text-muted">PASSWORD <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
+                            <input type="password" name="password" class="form-control border-start-0 bg-light" minlength="6" required
+                                   style="border-radius:0 8px 8px 0;">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-lg w-100 text-white fw-semibold"
+                            style="background:linear-gradient(135deg,#4361ee,#7c3aed);border:none;border-radius:12px;padding:12px;">
+                        <i class="bi bi-person-plus me-2"></i>Register
+                    </button>
+                </form>
+                <div class="text-center mt-4">
+                    <p class="text-muted small mb-0">
+                        Already have an account? <a href="{{ url_for('auth.login') }}" class="text-decoration-none fw-semibold" style="color:#4361ee;">Login</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <p class="text-center text-white-50 small mt-3">© 2026 Vypar · Powered by Flask</p>
+    </div>
+</div>
+{% endblock %}

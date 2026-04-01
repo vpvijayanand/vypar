@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Company Settings - Vypar{% endblock %}
+{% block page_title %}Company Profile{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-8"><div class="card"><div class="card-body">
+<form method="POST" enctype="multipart/form-data">
+    <div class="row g-3">
+        <div class="col-md-6"><label class="form-label">Business Name *</label><input type="text" name="company_name" class="form-control" value="{{ company.company_name if company else '' }}" required></div>
+        <div class="col-md-6"><label class="form-label">Business Type</label><select name="business_type" class="form-select">
+            {% for t in ['proprietorship','partnership','pvt_ltd','llp','other'] %}<option value="{{ t }}" {% if company and company.business_type == t %}selected{% endif %}>{{ t|replace('_',' ')|title }}</option>{% endfor %}
+        </select></div>
+        <div class="col-md-6"><label class="form-label">GSTIN</label><input type="text" name="gstin" class="form-control" value="{{ company.gstin if company else '' }}" maxlength="15" placeholder="22AAAAA0000A1Z5"></div>
+        <div class="col-md-6"><label class="form-label">PAN Number</label><input type="text" name="pan_number" class="form-control" value="{{ company.pan_number if company else '' }}" maxlength="10"></div>
+        <div class="col-md-6"><label class="form-label">Phone</label><input type="text" name="phone_number" class="form-control" value="{{ company.phone_number if company else '' }}"></div>
+        <div class="col-md-6"><label class="form-label">Email</label><input type="email" name="email" class="form-control" value="{{ company.email if company else '' }}"></div>
+        <div class="col-12"><label class="form-label">Address</label><textarea name="address_line1" class="form-control" rows="2">{{ company.address_line1 if company else '' }}</textarea></div>
+        <div class="col-md-4"><label class="form-label">City</label><input type="text" name="city" class="form-control" value="{{ company.city if company else '' }}"></div>
+        <div class="col-md-4"><label class="form-label">State *</label><input type="text" name="state" class="form-control" value="{{ company.state if company else '' }}" required></div>
+        <div class="col-md-4"><label class="form-label">PIN Code</label><input type="text" name="pincode" class="form-control" value="{{ company.pincode if company else '' }}" maxlength="6"></div>
+        <div class="col-md-6"><label class="form-label">Financial Year Start</label><select name="financial_year_start" class="form-select">
+            {% for m in range(1,13) %}<option value="{{ m }}" {% if company and company.financial_year_start == m %}selected{% endif %}>{{ ['','January','February','March','April','May','June','July','August','September','October','November','December'][m] }}</option>{% endfor %}
+        </select></div>
+        <div class="col-md-6"><label class="form-label">Logo</label><input type="file" name="logo" class="form-control" accept="image/*"></div>
+    </div>
+    <div class="mt-4"><button type="submit" class="btn btn-primary">Save Changes</button><a href="{{ url_for('settings.index') }}" class="btn btn-outline-secondary ms-2">Cancel</a></div>
+</form>
+</div></div></div></div>
+{% endblock %}

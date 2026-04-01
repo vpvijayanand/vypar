@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Cheques - Vypar{% endblock %}
+{% block page_title %}Cheques{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+    <ul class="nav nav-pills">
+        <li class="nav-item"><a class="nav-link {% if not request.args.get('status') %}active{% endif %}" href="{{ url_for('bank.list_cheques') }}">All</a></li>
+        {% for s in ['pending','cleared','bounced','cancelled'] %}
+        <li class="nav-item"><a class="nav-link {% if request.args.get('status') == s %}active{% endif %}" href="?status={{ s }}">{{ s|title }}</a></li>
+        {% endfor %}
+    </ul>
+    <div>
+        <a href="{{ url_for('bank.cheques_csv_download') }}" class="btn btn-outline-success btn-sm me-2"><i class="bi bi-file-earmark-spreadsheet me-1"></i>CSV</a>
+        <a href="{{ url_for('bank.create_cheque') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Cheque</a>
+    </div>
+</div>
+<div class="card"><div class="card-body">
+<div class="table-responsive"><table class="table table-hover align-middle">
+    <thead><tr><th>Cheque #</th><th>Type</th><th>Party</th><th>Bank</th><th>Date</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for c in cheques %}
+    <tr>
+        <td>{{ c.cheque_number }}</td>
+        <td><span class="badge bg-{{ 'success' if c.cheque_type == 'received' else 'warning' }}">{{ c.cheque_type|title }}</span></td>
+        <td>{{ c.party.name if c.party else '-' }}</td>
+        <td>{{ c.bank_name or '-' }}</td>
+        <td>{{ c.issue_date.strftime('%d %b %Y') }}</td>
+        <td>₹{{ c.amount|ind }}</td>
+        <td><span class="badge bg-{{ 'success' if c.status == 'cleared' else ('danger' if c.status == 'bounced' else ('secondary' if c.status == 'cancelled' else 'warning')) }}">{{ c.status|title }}</span></td>
+        <td>
+            {% if c.status == 'pending' %}
+            <form method="POST" action="{{ url_for('bank.update_cheque_status', cheque_id=c.id) }}" class="d-inline">
+                <input type="hidden" name="status" value="cleared"><button class="btn btn-sm btn-outline-success" title="Clear"><i class="bi bi-check-lg"></i></button>
+            </form>
+            <form method="POST" action="{{ url_for('bank.update_cheque_status', cheque_id=c.id) }}" class="d-inline">
+                <input type="hidden" name="status" value="bounced"><button class="btn btn-sm btn-outline-danger" title="Bounce"><i class="bi bi-x-lg"></i></button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
+    {% else %}<tr><td colspan="8" class="text-center text-muted py-4">No cheques found</td></tr>
+    {% endfor %}
+    </tbody>
+</table></div></div></div>
+{% endblock %}

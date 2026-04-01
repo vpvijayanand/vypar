@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if account else 'Add' }} Bank Account - Vypar{% endblock %}
+{% block page_title %}{{ 'Edit' if account else 'Add' }} Bank Account{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-lg-6"><div class="card"><div class="card-body">
+<form method="POST">
+    <div class="row g-3">
+        <div class="col-md-6"><label class="form-label">Account Name *</label><input type="text" name="account_name" class="form-control" value="{{ account.account_name if account else '' }}" required></div>
+        <div class="col-md-6"><label class="form-label">Bank Name</label><input type="text" name="bank_name" class="form-control" value="{{ account.bank_name if account else '' }}"></div>
+        <div class="col-md-6"><label class="form-label">Account Number</label><input type="text" name="account_number" class="form-control" value="{{ account.account_number if account else '' }}"></div>
+        <div class="col-md-6"><label class="form-label">IFSC Code</label><input type="text" name="ifsc_code" class="form-control" value="{{ account.ifsc_code if account else '' }}"></div>
+        <div class="col-md-6"><label class="form-label">Account Type</label><select name="account_type" class="form-select">
+            {% for t in ['savings','current','overdraft'] %}<option value="{{ t }}" {% if account and account.account_type == t %}selected{% endif %}>{{ t|title }}</option>{% endfor %}
+        </select></div>
+        {% if not account %}
+        <div class="col-md-6"><label class="form-label">Opening Balance</label><input type="number" step="0.01" name="opening_balance" class="form-control" value="0"></div>
+        {% endif %}
+    </div>
+    <div class="mt-4"><button type="submit" class="btn btn-primary">{{ 'Update' if account else 'Save' }}</button><a href="{{ url_for('bank.list_accounts') }}" class="btn btn-outline-secondary ms-2">Cancel</a></div>
+</form>
+</div></div></div></div>
+{% endblock %}

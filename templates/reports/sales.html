@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Sales Report - Vypar{% endblock %}
+{% block page_title %}<i class="bi bi-graph-up text-primary"></i> Sales Report{% endblock %}
+{% block content %}
+<div class="card mb-4"><div class="card-body">
+    <form method="GET" class="row g-3 align-items-end">
+        <div class="col-md-3"><label class="form-label">From</label><input type="date" name="from_date" class="form-control" value="{{ request.args.get('from_date','') }}"></div>
+        <div class="col-md-3"><label class="form-label">To</label><input type="date" name="to_date" class="form-control" value="{{ request.args.get('to_date','') }}"></div>
+        <div class="col-md-3"><label class="form-label">Party</label><select name="party_id" class="form-select"><option value="">All</option>{% for p in parties %}<option value="{{ p.id }}" {% if request.args.get('party_id')|string == p.id|string %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div>
+        <div class="col-md-3"><button class="btn btn-primary w-100">Apply</button></div>
+    </form>
+    <div class="mt-2 text-end"><a href="{{ url_for('reports.sales_report_csv', from_date=request.args.get('from_date',''), to_date=request.args.get('to_date',''), party_id=request.args.get('party_id','')) }}" class="btn btn-sm btn-outline-success"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Download CSV</a></div>
+</div></div>
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card text-center py-3"><h6 class="text-muted mb-1">Total Sales</h6><h4 class="amt">₹{{ (data.total_amount or 0)|ind }}</h4></div></div>
+    <div class="col-md-3"><div class="card text-center py-3"><h6 class="text-muted mb-1">Invoices</h6><h4>{{ data.count or 0 }}</h4></div></div>
+    <div class="col-md-3"><div class="card text-center py-3"><h6 class="text-muted mb-1">GST Collected</h6><h4 class="amt">₹{{ (data.total_tax or 0)|ind }}</h4></div></div>
+    <div class="col-md-3"><div class="card text-center py-3"><h6 class="text-muted mb-1">Received</h6><h4 class="amt">₹{{ (data.total_received or 0)|ind }}</h4></div></div>
+</div>
+<div class="card"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0">
+    <thead><tr><th>Invoice #</th><th>Date</th><th>Party</th><th class="text-end">Amount</th><th class="text-end">Received</th><th class="text-end">Balance</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for inv in data.invoices %}
+    <tr>
+        <td><a href="{{ url_for('sales.view_invoice', invoice_id=inv.id) }}" class="fw-semibold text-decoration-none">{{ inv.invoice_number }}</a></td>
+        <td>{{ inv.invoice_date }}</td>
+        <td>{{ inv.party_name or '-' }}</td>
+        <td class="text-end amt">₹{{ (inv.grand_total or 0)|ind }}</td>
+        <td class="text-end amt text-green">₹{{ (inv.amount_received or 0)|ind }}</td>
+        <td class="text-end amt text-red">₹{{ (inv.balance_due or 0)|ind }}</td>
+        <td><span class="badge badge-{{ inv.status }}">{{ inv.status|title }}</span></td>
+    </tr>
+    {% else %}<tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-inbox me-1"></i>No invoices found</td></tr>
+    {% endfor %}
+    </tbody>
+</table></div></div></div>
+{% endblock %}

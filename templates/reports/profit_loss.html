@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Profit & Loss - Vypar{% endblock %}
+{% block page_title %}Profit & Loss Statement{% endblock %}
+{% block content %}
+<div class="card mb-4"><div class="card-body">
+    <form method="GET" class="row g-3 align-items-end">
+        <div class="col-md-4"><label class="form-label">From</label><input type="date" name="start" class="form-control" value="{{ start }}"></div>
+        <div class="col-md-4"><label class="form-label">To</label><input type="date" name="end" class="form-control" value="{{ end }}"></div>
+        <div class="col-md-4"><button class="btn btn-primary w-100">Generate</button></div>
+    </form>
+    <div class="mt-2 text-end"><a href="{{ url_for('reports.profit_loss_csv_download', start=start, end=end) }}" class="btn btn-sm btn-outline-success"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Download CSV</a></div>
+</div></div>
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100"><div class="card-header bg-success text-white"><h5 class="mb-0">Revenue / Income</h5></div><div class="card-body">
+            <table class="table mb-0">
+                <tr><td>Sales Revenue</td><td class="text-end fw-bold amt">₹{{ (data.total_sales or 0)|ind }}</td></tr>
+                <tr><td>Other Income</td><td class="text-end fw-bold amt">₹{{ (data.other_income or 0)|ind }}</td></tr>
+                <tr class="table-success"><td><strong>Total Income</strong></td><td class="text-end fw-bold amt">₹{{ ((data.total_sales or 0) + (data.other_income or 0))|ind }}</td></tr>
+            </table>
+        </div></div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100"><div class="card-header bg-danger text-white"><h5 class="mb-0">Expenses</h5></div><div class="card-body">
+            <table class="table mb-0">
+                <tr><td>Purchase Cost</td><td class="text-end fw-bold amt">₹{{ (data.total_purchases or 0)|ind }}</td></tr>
+                <tr><td>Operating Expenses</td><td class="text-end fw-bold amt">₹{{ (data.total_expenses or 0)|ind }}</td></tr>
+                <tr class="table-danger"><td><strong>Total Expenses</strong></td><td class="text-end fw-bold amt">₹{{ ((data.total_purchases or 0) + (data.total_expenses or 0))|ind }}</td></tr>
+            </table>
+        </div></div>
+    </div>
+</div>
+<div class="row g-4 mt-1">
+    <div class="col-md-6">
+        <div class="card text-center py-4">
+            <h5 class="text-muted">Gross Profit</h5>
+            <h2 class="amt {{ 'text-success' if (data.gross_profit or 0) >= 0 else 'text-danger' }}">₹{{ (data.gross_profit or 0)|ind }}</h2>
+            <small class="text-muted">Sales − Purchases</small>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card text-center py-4">
+            <h5 class="text-muted">Net Profit</h5>
+            <h2 class="amt {{ 'text-success' if (data.net_profit or 0) >= 0 else 'text-danger' }}">₹{{ (data.net_profit or 0)|ind }}</h2>
+            <small class="text-muted">Total Income − Total Expenses</small>
+        </div>
+    </div>
+</div>
+{% endblock %}

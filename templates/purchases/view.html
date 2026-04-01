@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Purchase {{ purchase.bill_number }} - Vypar{% endblock %}
+{% block page_title %}Purchase {{ purchase.bill_number }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <span>{{ purchase.bill_number }}</span>
+                <span class="badge badge-{{ purchase.payment_status }}">{{ purchase.payment_status|title }}</span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4"><small class="text-muted">Date</small><br><strong>{{ purchase.bill_date }}</strong></div>
+                    <div class="col-md-4"><small class="text-muted">Supplier</small><br><strong>{{ purchase.supplier.name }}</strong></div>
+                    <div class="col-md-4"><small class="text-muted">Due Date</small><br><strong>{{ purchase.due_date or 'N/A' }}</strong></div>
+                </div>
+                <table class="table table-sm">
+                    <thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Price</th><th>GST</th><th>Tax</th><th>Total</th></tr></thead>
+                    <tbody>
+                    {% for item in purchase.items %}
+                        <tr>
+                            <td>{{ loop.index }}</td><td>{{ item.item_name }}</td>
+                            <td>{{ item.quantity|float }}</td><td>₹{{ item.unit_price|float|ind }}</td>
+                            <td>{{ item.gst_rate|float }}%</td><td>₹{{ item.tax_amount|float|ind }}</td>
+                            <td><strong>₹{{ item.total_amount|float|ind }}</strong></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2"><span>Subtotal</span><strong>₹{{ purchase.subtotal|float|ind }}</strong></div>
+                <div class="d-flex justify-content-between mb-2"><span>Tax</span><strong>₹{{ purchase.tax_total|float|ind }}</strong></div>
+                <hr>
+                <div class="d-flex justify-content-between fs-5"><span>Total</span><strong class="text-primary">₹{{ purchase.grand_total|float|ind }}</strong></div>
+                <hr>
+                <div class="d-flex justify-content-between"><span>Paid</span><strong class="text-success">₹{{ purchase.amount_paid|float|ind }}</strong></div>
+                <div class="d-flex justify-content-between"><span>Balance</span><strong class="text-danger">₹{{ purchase.balance_due|float|ind }}</strong></div>
+            </div>
+        </div>
+        {% if purchase.balance_due|float > 0 %}
+        <div class="card">
+            <div class="card-header">Record Payment</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('purchases.record_payment', bill_id=purchase.id) }}">
+                    <input type="number" step="0.01" name="amount" class="form-control mb-2" placeholder="Amount" required>
+                    <select name="payment_mode" class="form-select form-select-sm mb-2">
+                        <option value="cash">Cash</option><option value="bank">Bank</option><option value="upi">UPI</option>
+                    </select>
+                    <button type="submit" class="btn btn-success btn-sm w-100">Record Payment</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+<a href="{{ url_for('purchases.list_purchases') }}" class="btn btn-outline-secondary mt-3"><i class="bi bi-arrow-left me-1"></i>Back</a>
+<a href="{{ url_for('purchases.purchase_pdf', bill_id=purchase.id) }}" target="_blank" class="btn btn-danger mt-3 ms-2"><i class="bi bi-file-pdf me-1"></i>Download PDF</a>
+<a href="{{ url_for('purchases.purchase_pdf', bill_id=purchase.id) }}" target="_blank" class="btn btn-outline-primary mt-3 ms-2"><i class="bi bi-printer me-1"></i>Print</a>
+{% endblock %}

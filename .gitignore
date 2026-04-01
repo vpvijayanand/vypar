@@ -85,11 +85,11 @@ node_modules/
 *.pid
 dist/
 build/
+test_features.py
+test_party_stmt.py
 
 # IDE local settings
-.vscode/settings.json
-.vscode/launch.json
-.vscode/extensions.json
+.vscode/
 
 # Temporary & Backup files
 *.tmp
